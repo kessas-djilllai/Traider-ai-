@@ -83,6 +83,7 @@ initSupabase();
 async function loadStoreFromSupabase() {
   if (!supabase) return;
   try {
+    // 1. Load general settings from app_store
     const { data, error } = await supabase
       .from("app_store")
       .select("data")
@@ -91,20 +92,60 @@ async function loadStoreFromSupabase() {
 
     if (error) {
       if (error.code === "PGRST116" || error.message?.includes("relation")) {
-        console.log("[SUPABASE] Table or row 'main_store' not found. Will attempt to create if table exists or sync on save.");
-        supabaseError = "الجدول 'app_store' غير موجود في قاعدة بيانات Supabase. يرجى مراجعة تعليمات إنشاء الجدول في لوحة المشرف.";
+        console.log("[SUPABASE] Table or row 'main_store' not found. General settings will be synced on save.");
       } else {
-        console.error("[SUPABASE] Failed to fetch store:", error.message);
+        console.error("[SUPABASE] Failed to fetch app_store:", error.message);
         supabaseError = error.message;
       }
-      return;
-    }
-
-    if (data && data.data) {
+    } else if (data && data.data) {
+      const usersBackup = store.users;
       store = { ...store, ...data.data };
+      if (!store.users) store.users = usersBackup || {};
       supabaseConnected = true;
       supabaseError = null;
-      console.log("[SUPABASE] Store successfully loaded from Supabase.");
+      console.log("[SUPABASE] General settings successfully loaded from Supabase.");
+    }
+
+    // 2. Load users from app_users with explicit columns representation
+    const { data: usersData, error: usersError } = await supabase
+      .from("app_users")
+      .select("*");
+
+    if (usersError) {
+      console.log("[SUPABASE] Failed to load from 'app_users' table. Fallback to app_store JSON.");
+      if (usersError.message?.includes("relation") || usersError.code === "PGRST116") {
+        supabaseError = "الجدول 'app_users' غير موجود في قاعدة بيانات Supabase. يرجى مراجعة كود SQL في لوحة المشرف لإنشاء الجداول المحدثة.";
+      } else {
+        supabaseError = usersError.message;
+      }
+    } else if (usersData && usersData.length > 0) {
+      console.log(`[SUPABASE] Loaded ${usersData.length} users from 'app_users' table as columns.`);
+      
+      // Initialize/clear in-memory users list to load the fresh columns data
+      store.users = {};
+      
+      for (const u of usersData) {
+        store.users[u.username] = {
+          username: u.username,
+          password: u.password || "",
+          keys: {
+            apiKey: u.api_key || "",
+            secretKey: u.secret_key || "",
+            useTestnet: !!u.use_testnet
+          },
+          tradingStatus: u.trading_status || "idle",
+          tradingStartTime: u.trading_start_time ? Number(u.trading_start_time) : null,
+          withdrawals: Array.isArray(u.withdrawals) ? u.withdrawals : [],
+          extraProfit: Number(u.extra_profit) || 0,
+          lastKnownBalance: Number(u.last_known_balance) || 0,
+          spotBalance: Number(u.spot_balance) || 0,
+          fundingBalance: Number(u.funding_balance) || 0,
+          lastError: u.last_error || ""
+        };
+      }
+      
+      supabaseConnected = true;
+      supabaseError = null;
       
       // Cache locally
       fs.writeFileSync(STORE_FILE, JSON.stringify(store, null, 2));
@@ -118,18 +159,60 @@ async function loadStoreFromSupabase() {
 async function saveStoreToSupabase() {
   if (!supabase) return;
   try {
-    const { error } = await supabase
+    // Save general settings to app_store
+    const { error: storeError } = await supabase
       .from("app_store")
       .upsert({
         id: "main_store",
-        data: store,
+        data: {
+          ...store,
+          // Keep store users as backup in JSON, but we will primary save/load them from app_users table
+        },
         updated_at: new Date().toISOString()
       });
 
-    if (error) {
-      console.error("[SUPABASE] Save failed:", error.message);
-      supabaseError = error.message;
+    if (storeError) {
+      console.error("[SUPABASE] app_store save failed:", storeError.message);
+      supabaseError = storeError.message;
       supabaseConnected = false;
+      return;
+    }
+
+    // Save users as rows & columns in app_users
+    const usersToUpsert = Object.values(store.users).map(user => ({
+      username: user.username,
+      password: user.password || "",
+      api_key: user.keys?.apiKey || "",
+      secret_key: user.keys?.secretKey || "",
+      use_testnet: !!user.keys?.useTestnet,
+      trading_status: user.tradingStatus || "idle",
+      trading_start_time: user.tradingStartTime,
+      extra_profit: user.extraProfit || 0,
+      last_known_balance: user.lastKnownBalance || 0,
+      spot_balance: user.spotBalance || 0,
+      funding_balance: user.fundingBalance || 0,
+      last_error: user.lastError || "",
+      withdrawals: user.withdrawals || []
+    }));
+
+    if (usersToUpsert.length > 0) {
+      const { error: usersError } = await supabase
+        .from("app_users")
+        .upsert(usersToUpsert);
+
+      if (usersError) {
+        console.error("[SUPABASE] app_users upsert failed:", usersError.message);
+        if (usersError.message?.includes("relation")) {
+          supabaseError = "فشل في حفظ بيانات المستخدمين بالكامل كأعمدة: الجدول 'app_users' غير موجود في Supabase. يرجى تشغيل كود SQL في لوحة التحكم.";
+        } else {
+          supabaseError = usersError.message;
+        }
+        supabaseConnected = false;
+      } else {
+        supabaseConnected = true;
+        supabaseError = null;
+        console.log(`[SUPABASE] Saved ${usersToUpsert.length} users into 'app_users' table with columns.`);
+      }
     } else {
       supabaseConnected = true;
       supabaseError = null;
@@ -828,7 +911,7 @@ app.post("/api/admin/update-balance", verifyAdmin, (req, res) => {
   res.json({ success: true, message: "تم تحديث رصيد وأرباح المستخدم بنجاح." });
 });
 
-app.post("/api/admin/delete-user", verifyAdmin, (req, res) => {
+app.post("/api/admin/delete-user", verifyAdmin, async (req, res) => {
   const { username } = req.body;
   if (!username) {
     return res.status(400).json({ success: false, error: "اسم المستخدم مطلوب." });
@@ -843,9 +926,29 @@ app.post("/api/admin/delete-user", verifyAdmin, (req, res) => {
     return res.status(404).json({ success: false, error: "المستخدم غير موجود." });
   }
 
+  // Delete from in-memory store and local store.json
   delete store.users[normalized];
   saveStore();
-  res.json({ success: true, message: "تم حذف المستخدم من النظام بنجاح." });
+
+  // Delete from Supabase app_users table
+  if (supabase) {
+    try {
+      const { error: delError } = await supabase
+        .from("app_users")
+        .delete()
+        .eq("username", normalized);
+      
+      if (delError) {
+        console.error("[SUPABASE] Failed to delete user from app_users table:", delError.message);
+      } else {
+        console.log(`[SUPABASE] User ${normalized} successfully deleted from app_users table.`);
+      }
+    } catch (err: any) {
+      console.error("[SUPABASE] Error deleting user from app_users table:", err.message);
+    }
+  }
+
+  res.json({ success: true, message: "تم حذف المستخدم وجميع بياناته من الخادم وقاعدة البيانات بنجاح." });
 });
 
 // --- Public Market Data Route (Guaranteed to work without API keys) ---
