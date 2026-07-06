@@ -25,7 +25,9 @@ import {
   Search,
   ArrowLeft,
   CheckSquare,
-  XSquare
+  XSquare,
+  Server,
+  Globe
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { TradingChart } from './components/TradingChart';
@@ -115,6 +117,12 @@ export default function App() {
   const [supabaseInputUrl, setSupabaseInputUrl] = useState('');
   const [supabaseInputKey, setSupabaseInputKey] = useState('');
   const [savingSupabaseConfig, setSavingSupabaseConfig] = useState(false);
+
+  // Server/API Connection settings for Vercel
+  const [showConnectionSettings, setShowConnectionSettings] = useState(false);
+  const [backendUrlInput, setBackendUrlInput] = useState(() => {
+    return localStorage.getItem('api_backend_url') || '';
+  });
 
   const ADMIN_EMAILS = ["0696666164dj@gmail.com", "admin", "admin@gmail.com"];
   const isAdmin = user ? ADMIN_EMAILS.includes(user.trim().toLowerCase()) : false;
@@ -293,12 +301,19 @@ export default function App() {
       const res = await fetch("/api/auth/google/url");
       const data = await res.json();
       if (data.success && data.url) {
+        let finalUrl = data.url;
+        if (finalUrl.startsWith("/")) {
+          const backendUrl = localStorage.getItem('api_backend_url') || '';
+          if (backendUrl) {
+            finalUrl = `${backendUrl.replace(/\/$/, '')}${finalUrl}`;
+          }
+        }
         const width = 500;
         const height = 655;
         const left = window.screen.width / 2 - width / 2;
         const top = window.screen.height / 2 - height / 2;
         const authWindow = window.open(
-          data.url,
+          finalUrl,
           "google_oauth_popup",
           `width=${width},height=${height},top=${top},left=${left}`
         );
@@ -317,7 +332,15 @@ export default function App() {
   useEffect(() => {
     const handleOAuthMessage = (event: MessageEvent) => {
       const origin = event.origin;
-      if (!origin.endsWith('.run.app') && !origin.includes('localhost') && !origin.includes('127.0.0.1')) {
+      const backendUrl = localStorage.getItem('api_backend_url') || '';
+      let isBackendOrigin = false;
+      if (backendUrl) {
+        try {
+          isBackendOrigin = origin === new URL(backendUrl).origin;
+        } catch (e) {}
+      }
+
+      if (!origin.endsWith('.run.app') && !origin.includes('localhost') && !origin.includes('127.0.0.1') && !origin.includes('vercel.app') && !isBackendOrigin) {
         return;
       }
 
@@ -691,6 +714,81 @@ export default function App() {
             </svg>
             تسجيل الدخول / التسجيل عبر Google
           </button>
+
+          {/* Automatic detection alert for Vercel/External hostings */}
+          {(!window.location.origin.endsWith('.run.app') && !window.location.origin.includes('localhost') && !window.location.origin.includes('127.0.0.1') && !localStorage.getItem('api_backend_url')) && (
+            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 text-[11px] p-3.5 rounded-2xl space-y-1.5 leading-relaxed text-right animate-fade-in">
+              <div className="font-bold flex items-center gap-1">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
+                <span>تنبيه الاتصال بالخادم (Vercel)</span>
+              </div>
+              <p className="text-[10px] text-slate-600 leading-normal">
+                أنت تقوم بتشغيل الواجهة من استضافة خارجية (مثل Vercel). لإتاحة تسجيل الدخول والاتصال، يرجى إدخال رابط خادم Cloud Run الخاص بك في خيار "إعدادات اتصال الخادم" بالأسفل.
+              </p>
+            </div>
+          )}
+
+          {/* Server Connection settings for Vercel/External environments */}
+          <div className="pt-2 border-t border-slate-100/50">
+            <button
+              type="button"
+              onClick={() => setShowConnectionSettings(!showConnectionSettings)}
+              className="w-full flex items-center justify-center gap-1.5 text-[11px] text-slate-500 hover:text-blue-600 transition-all cursor-pointer"
+            >
+              <Server className="w-3.5 h-3.5" />
+              <span>إعدادات اتصال الخادم (مطلوب لـ Vercel)</span>
+            </button>
+            
+            {showConnectionSettings && (
+              <div className="mt-3 p-3.5 bg-slate-50 border border-slate-200/55 rounded-2xl space-y-2.5 animate-fade-in text-right">
+                <div className="text-[10px] text-slate-500 leading-relaxed">
+                  إذا قمت برفع الموقع على Vercel، يجب عليك إدخال رابط خادم Cloud Run الخاص بك هنا لكي يتصل التطبيق بقاعدة البيانات والـ API بشكل صحيح.
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 mb-1">رابط خادم API (Backend URL):</label>
+                  <input
+                    type="url"
+                    value={backendUrlInput}
+                    onChange={(e) => setBackendUrlInput(e.target.value)}
+                    placeholder="https://ais-...run.app"
+                    className="w-full border border-slate-200/80 rounded-xl px-3 py-2 text-[11px] text-slate-800 focus:outline-none focus:border-blue-500 text-left"
+                    dir="ltr"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      localStorage.setItem('api_backend_url', backendUrlInput.trim());
+                      showToast("تم حفظ رابط الخادم بنجاح! سيتم إعادة تحميل الصفحة للتطبيق.", "success");
+                      setTimeout(() => {
+                        window.location.reload();
+                      }, 1000);
+                    }}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold py-2 rounded-xl transition-all cursor-pointer"
+                  >
+                    حفظ وإعادة تحميل
+                  </button>
+                  {localStorage.getItem('api_backend_url') && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        localStorage.removeItem('api_backend_url');
+                        setBackendUrlInput('');
+                        showToast("تمت استعادة الرابط الافتراضي بنجاح!", "success");
+                        setTimeout(() => {
+                          window.location.reload();
+                        }, 1000);
+                      }}
+                      className="bg-slate-200 hover:bg-slate-300 text-slate-700 text-[10px] font-bold px-3 py-2 rounded-xl transition-all cursor-pointer"
+                    >
+                      إعادة تعيين
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );

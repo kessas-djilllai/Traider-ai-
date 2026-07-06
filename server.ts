@@ -113,15 +113,19 @@ async function loadStoreFromSupabase() {
 
     if (usersError) {
       console.log("[SUPABASE] Failed to load from 'app_users' table. Fallback to app_store JSON.");
-      if (usersError.message?.includes("relation") || usersError.code === "PGRST116") {
+      if (usersError.message?.includes("relation") || usersError.code === "PGRST116" || usersError.code === "42P01") {
         supabaseError = "الجدول 'app_users' غير موجود في قاعدة بيانات Supabase. يرجى مراجعة كود SQL في لوحة المشرف لإنشاء الجداول المحدثة.";
+        // If the tables were deleted/dropped from Supabase, we also clear our in-memory/local users store to match the deletion
+        console.log("[SUPABASE] Table dropped/deleted. Resetting local users state to match empty state.");
+        store.users = {};
+        fs.writeFileSync(STORE_FILE, JSON.stringify(store, null, 2));
       } else {
         supabaseError = usersError.message;
       }
-    } else if (usersData && usersData.length > 0) {
+    } else if (usersData) {
       console.log(`[SUPABASE] Loaded ${usersData.length} users from 'app_users' table as columns.`);
       
-      // Initialize/clear in-memory users list to load the fresh columns data
+      // Initialize/clear in-memory users list to load the fresh columns data (or clear if empty)
       store.users = {};
       
       for (const u of usersData) {
@@ -866,7 +870,7 @@ app.get("/api/admin/supabase-status", verifyAdmin, (req, res) => {
   });
 });
 
-app.post("/api/admin/supabase-config", verifyAdmin, (req, res) => {
+app.post("/api/admin/supabase-config", verifyAdmin, async (req, res) => {
   const { url, anonKey } = req.body;
   if (!url || !anonKey) {
     return res.status(400).json({ success: false, error: "كلا من الرابط والمفتاح مطلوبين." });
@@ -880,9 +884,17 @@ app.post("/api/admin/supabase-config", verifyAdmin, (req, res) => {
   saveStore();
   initSupabase();
 
+  if (supabase) {
+    try {
+      await loadStoreFromSupabase();
+    } catch (err: any) {
+      console.error("[SUPABASE] Load on config change failed:", err.message);
+    }
+  }
+
   res.json({
     success: true,
-    message: "تم حفظ إعدادات Supabase وتحديث الاتصال بنجاح.",
+    message: "تم حفظ إعدادات Supabase وتحديث الاتصال بنجاح وتزامن الحسابات فوراً.",
     connected: supabaseConnected,
     error: supabaseError
   });
