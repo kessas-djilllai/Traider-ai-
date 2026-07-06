@@ -990,7 +990,7 @@ create table if not exists app_users (
                     </button>
                   </div>
                   <p className="text-[10px] text-slate-500 font-bold leading-relaxed">
-                    * تأكد أيضاً من إضافة المتغيرات البيئية <code className="font-mono text-slate-700 bg-slate-100 px-1 py-0.5 rounded text-[11px]">SUPABASE_URL</code> و <code className="font-mono text-slate-700 bg-slate-100 px-1 py-0.5 rounded text-[11px]">SUPABASE_ANON_KEY</code> في ملف إعدادات الخادم ليعمل الاتصال تلقائياً أو أدخلهما بالأسفل يدوياً.
+                    * تأكد من إضافة المتغيرات البيئية <code className="font-mono text-slate-700 bg-slate-100 px-1 py-0.5 rounded text-[11px]">SUPABASE_URL</code> و <code className="font-mono text-slate-700 bg-slate-100 px-1 py-0.5 rounded text-[11px]">SUPABASE_ANON_KEY</code> في إعدادات الخادم ليعمل الاتصال السحابي تلقائياً وبأقصى درجات الحماية والأمان.
                   </p>
                 </div>
               ) : (
@@ -1006,58 +1006,15 @@ create table if not exists app_users (
                 </div>
               )}
 
-              {/* Dynamic manual keys config form */}
-              <div className="border-t border-white/50 pt-4 mt-4 text-right">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowSupabaseForm(!showSupabaseForm);
-                    if (supabaseStatus) {
-                      setSupabaseInputUrl(supabaseStatus.supabaseUrl || '');
-                      setSupabaseInputKey('');
-                    }
-                  }}
-                  className="px-3.5 py-2 bg-white/40 hover:bg-white/80 text-blue-600 border border-white/80 hover:border-white text-[10px] font-black rounded-xl transition-all shadow-sm cursor-pointer"
-                >
-                  {showSupabaseForm ? "إغلاق نافذة الإعدادات" : "إعداد / تعديل بيانات ربط Supabase السحابي"}
-                </button>
-
-                {showSupabaseForm && (
-                  <form onSubmit={handleSaveSupabaseConfig} className="mt-4 bg-white/30 backdrop-blur-md p-4 border border-white/50 rounded-2xl space-y-3.5">
-                    <p className="text-[10px] text-slate-500 text-right leading-relaxed font-bold">
-                      يمكنك هنا إدخال بيانات مشروع Supabase الخاص بك يدوياً ليقوم التطبيق بمزامنة وحفظ بيانات الحسابات سحابياً بشكل فوري وتلقائي.
-                    </p>
-                    <div className="space-y-1">
-                      <label className="text-[10px] text-slate-500 font-black block text-right">رابط المشروع (SUPABASE_URL)</label>
-                      <input
-                        type="url"
-                        required
-                        placeholder="https://xxxxxx.supabase.co"
-                        value={supabaseInputUrl}
-                        onChange={(e) => setSupabaseInputUrl(e.target.value)}
-                        className="w-full glass-input rounded-xl py-3 px-4 text-xs text-slate-800 focus:outline-none transition-all text-left font-mono"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] text-slate-500 font-black block text-right">مفتاح Anon أو Service Role Key</label>
-                      <input
-                        type="password"
-                        required
-                        placeholder="أدخل مفتاح الـ API الخاص بـ Supabase..."
-                        value={supabaseInputKey}
-                        onChange={(e) => setSupabaseInputKey(e.target.value)}
-                        className="w-full glass-input rounded-xl py-3 px-4 text-xs text-slate-800 focus:outline-none transition-all text-left font-mono"
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      disabled={savingSupabaseConfig}
-                      className="w-full bg-blue-600 hover:bg-blue-750 text-white font-black py-3.5 rounded-xl text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-blue-500/10"
-                    >
-                      {savingSupabaseConfig ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "حفظ بيانات الربط واختبار الاتصال"}
-                    </button>
-                  </form>
-                )}
+              {/* Secure Server Environment Notification */}
+              <div className="border-t border-white/50 pt-4 mt-4 text-right space-y-2">
+                <div className="flex items-center gap-2 justify-end text-emerald-700 font-black text-xs">
+                  <span>تم تأمين الاتصال عبر متغيرات البيئة</span>
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                </div>
+                <p className="text-[10px] text-slate-500 leading-relaxed font-bold">
+                  تطبيقاً لأعلى معايير الحماية والأمان، يتم جلب وربط قاعدة بيانات Supabase سحابياً بشكل مباشر وتلقائي من متغيرات بيئة الخادم (Environment Variables) الخاصة بالاستضافة، ومُنع إدخالها يدوياً من واجهة لوحة الإدارة لمنع أي تسرّب للبيانات الحساسة.
+                </p>
               </div>
             </div>
           )}
@@ -1587,6 +1544,60 @@ create table if not exists app_users (
                 <div className="space-y-0.5 text-right">
                   <h3 className="text-xs font-black text-slate-800">إعدادات قنوات Binance API</h3>
                   <p className="text-[9px] text-slate-500 font-bold">تشفير عسكري آمن ومحمي 100% لمفاتيح التداول</p>
+                </div>
+              </div>
+
+              {/* Server IP Restriction Helper */}
+              <div className="bg-gradient-to-r from-blue-50/60 to-indigo-50/60 border border-blue-100 p-4 rounded-2xl text-right space-y-3">
+                <div className="flex items-center gap-2 justify-end text-blue-800 font-black text-xs">
+                  <span>حماية وتقييد الوصول لعنوان الـ IP (موصى به للغاية)</span>
+                  <Shield className="w-4 h-4 text-blue-600" />
+                </div>
+                <p className="text-[10px] text-slate-600 leading-relaxed font-semibold">
+                  لحماية أصولك ومنع السحب أو التداول من خارج الخادم، يُنصح بشدة بتفعيل خيار 
+                  <strong className="text-slate-800 mx-1">"الوصول المقيد لـ IPs الموثوقة فقط (Restrict access to trusted IPs only)"</strong> 
+                  في صفحة إدارة المفاتيح على Binance، ونسخ عنوان الـ IP الخاص بخادم التطبيق التالي ووضعه هناك لتأمين السحب والتحويل بالكامل:
+                </p>
+                
+                <div className="flex items-center justify-between bg-white border border-slate-200/80 rounded-xl p-2.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (serverIp) {
+                        navigator.clipboard.writeText(serverIp);
+                        setCopiedIp(true);
+                        showToast("تم نسخ عنوان IP الخاص بالخادم بنجاح!", "success");
+                        setTimeout(() => setCopiedIp(false), 2000);
+                      } else {
+                        fetchServerIp();
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-bold transition-all cursor-pointer shadow-sm shadow-blue-500/10"
+                  >
+                    {copiedIp ? (
+                      <>
+                        <Check className="w-3 h-3" />
+                        <span>تم النسخ!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3" />
+                        <span>نسخ العنوان</span>
+                      </>
+                    )}
+                  </button>
+                  
+                  <div className="flex items-center gap-2 font-mono text-xs text-slate-800 font-bold">
+                    {serverIp ? (
+                      <span className="bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-lg select-all">{serverIp}</span>
+                    ) : (
+                      <span className="text-slate-400 text-[10px] flex items-center gap-1">
+                        <Loader2 className="w-3 h-3 animate-spin text-blue-500" />
+                        جاري جلب الـ IP...
+                      </span>
+                    )}
+                    <Globe className="w-4 h-4 text-slate-400" />
+                  </div>
                 </div>
               </div>
 

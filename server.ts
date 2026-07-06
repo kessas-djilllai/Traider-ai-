@@ -56,8 +56,8 @@ let supabaseError: string | null = null;
 let supabaseConnected = false;
 
 function initSupabase() {
-  const url = process.env.SUPABASE_URL || store.supabaseConfig?.url || "";
-  const key = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || store.supabaseConfig?.anonKey || "";
+  const url = process.env.SUPABASE_URL || "";
+  const key = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
   if (url && key) {
     try {
@@ -65,7 +65,7 @@ function initSupabase() {
         auth: { persistSession: false }
       });
       supabaseError = null;
-      console.log("[SUPABASE] Client initialized successfully.");
+      console.log("[SUPABASE] Client initialized successfully from environment variables.");
     } catch (err: any) {
       console.error("[SUPABASE] Initialization failed:", err.message);
       supabaseError = err.message;
@@ -73,7 +73,7 @@ function initSupabase() {
     }
   } else {
     supabase = null;
-    supabaseError = "لم يتم تكوين مفاتيح SUPABASE_URL أو SUPABASE_ANON_KEY في البيئة أو الإعدادات بعد.";
+    supabaseError = "لم يتم تكوين متغيرات البيئة SUPABASE_URL و SUPABASE_ANON_KEY في الخادم بعد.";
   }
 }
 
@@ -319,6 +319,10 @@ function translateBinanceError(error: any): string {
   const errMsg = error.message || String(error);
   const errName = error.name || "";
   
+  if (errMsg.includes("-2015") || errMsg.includes("Invalid API-key, IP, or permissions for action")) {
+    return "خطأ في مفتاح الـ API للرصيد (-2015): مفتاح API الخاص بك غير صالح، أو لم يتم تفعيل الصلاحيات المناسبة له (مثل تمكين القراءة وجلب الرصيد Enable Reading)، أو أن هناك قيوداً على عنوان الـ IP لمفتاح الـ API في حسابك على Binance. يرجى تعديل إعدادات المفتاح في منصة Binance وتفعيل الخيارات اللازمة وإلغاء قيود الـ IP (Unrestricted Access).";
+  }
+
   if (errMsg.includes("Withdrawal amount must be greater than the transaction fee") || errMsg.includes("-4028") || errMsg.includes("031035")) {
     return "فشل السحب: المبلغ المراد سحبه ضئيل جداً وأقل من رسوم تحويل الشبكة (Transaction Fee). يرجى زيادة مبلغ السحب ليغطي رسوم تحويل شبكة TRC-20 (التي تبلغ عادة حوالي 1 إلى 2 USDT).";
   }
@@ -858,8 +862,8 @@ app.get("/api/admin/users", verifyAdmin, (req, res) => {
 });
 
 app.get("/api/admin/supabase-status", verifyAdmin, (req, res) => {
-  const url = process.env.SUPABASE_URL || store.supabaseConfig?.url || "";
-  const key = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || store.supabaseConfig?.anonKey || "";
+  const url = process.env.SUPABASE_URL || "";
+  const key = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
   res.json({
     success: true,
     configured: !!(url && key),
@@ -871,32 +875,9 @@ app.get("/api/admin/supabase-status", verifyAdmin, (req, res) => {
 });
 
 app.post("/api/admin/supabase-config", verifyAdmin, async (req, res) => {
-  const { url, anonKey } = req.body;
-  if (!url || !anonKey) {
-    return res.status(400).json({ success: false, error: "كلا من الرابط والمفتاح مطلوبين." });
-  }
-
-  store.supabaseConfig = {
-    url: url.trim(),
-    anonKey: anonKey.trim()
-  };
-
-  saveStore();
-  initSupabase();
-
-  if (supabase) {
-    try {
-      await loadStoreFromSupabase();
-    } catch (err: any) {
-      console.error("[SUPABASE] Load on config change failed:", err.message);
-    }
-  }
-
-  res.json({
-    success: true,
-    message: "تم حفظ إعدادات Supabase وتحديث الاتصال بنجاح وتزامن الحسابات فوراً.",
-    connected: supabaseConnected,
-    error: supabaseError
+  return res.status(400).json({
+    success: false,
+    error: "يرجى تهيئة قاعدة البيانات عبر متغيرات بيئة الخادم (SUPABASE_URL و SUPABASE_ANON_KEY) لضمان أقصى درجات الأمان والامتثال لشروط الحماية."
   });
 });
 
