@@ -1,0 +1,8 @@
+{
+  "name": "Binance USDT Wallet",
+  "description": "منصة مبسطة وآمنة لاستعراض رصيد USDT على Binance وسحب الأموال عبر شبكة TRON TRC-20 فورياً.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

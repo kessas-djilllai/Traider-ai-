@@ -1,0 +1,74 @@
+{
+  "users": {
+    "0696666164dj@gmail.com": {
+      "username": "0696666164dj@gmail.com",
+      "keys": {
+        "apiKey": "",
+        "secretKey": "",
+        "useTestnet": false
+      },
+      "tradingStatus": "idle",
+      "tradingStartTime": null,
+      "withdrawals": [],
+      "extraProfit": 0,
+      "lastKnownBalance": 0,
+      "spotBalance": 0,
+      "fundingBalance": 0,
+      "lastError": ""
+    },
+    "shop2game.hospot@gmail.com": {
+      "username": "shop2game.hospot@gmail.com",
+      "keys": {
+        "apiKey": "",
+        "secretKey": "",
+        "useTestnet": false
+      },
+      "tradingStatus": "idle",
+      "tradingStartTime": null,
+      "withdrawals": [],
+      "extraProfit": 0,
+      "lastKnownBalance": 0,
+      "spotBalance": 0,
+      "fundingBalance": 0,
+      "lastError": ""
+    },
+    "testuser": {
+      "username": "testuser",
+      "keys": {
+        "apiKey": "",
+        "secretKey": "",
+        "useTestnet": false
+      },
+      "tradingStatus": "idle",
+      "tradingStartTime": null,
+      "withdrawals": [],
+      "extraProfit": 0,
+      "lastKnownBalance": 0,
+      "spotBalance": 0,
+      "fundingBalance": 0,
+      "lastError": ""
+    }
+  },
+  "keys": {
+    "apiKey": "",
+    "secretKey": "",
+    "useTestnet": false
+  },
+  "telegram": {
+    "botToken": "",
+    "chatId": ""
+  },
+  "settings": {
+    "symbol": "BTC/USDT",
+    "timeframe": "1m"
+  },
+  "botStatus": "stopped",
+  "trades": [],
+  "withdrawals": [],
+  "lastKnownBalance": 0,
+  "lastError": "",
+  "supabaseConfig": {
+    "url": "",
+    "anonKey": ""
+  }
+}
