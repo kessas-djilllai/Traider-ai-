@@ -10,7 +10,7 @@ try {
     value: function (input: any, init: any) {
       let url = typeof input === 'string' ? input : (input && typeof input === 'object' ? (input as any).url : '');
       if (url && (url.startsWith('/api/') || url.startsWith('/auth/'))) {
-        const backendUrl = localStorage.getItem('api_backend_url') || '';
+        const backendUrl = localStorage.getItem('api_backend_url') || ((import.meta as any).env?.VITE_API_BACKEND_URL || 'https://ais-pre-ggqoug6mr767qlglydpnvc-697456071670.europe-west2.run.app');
         if (backendUrl) {
           const cleanBackendUrl = backendUrl.replace(/\/$/, '');
           if (typeof input === 'string') {
@@ -38,7 +38,7 @@ try {
     (window as any).fetch = function (input: any, init: any) {
       let url = typeof input === 'string' ? input : (input && typeof input === 'object' ? (input as any).url : '');
       if (url && (url.startsWith('/api/') || url.startsWith('/auth/'))) {
-        const backendUrl = localStorage.getItem('api_backend_url') || '';
+        const backendUrl = localStorage.getItem('api_backend_url') || ((import.meta as any).env?.VITE_API_BACKEND_URL || 'https://ais-pre-ggqoug6mr767qlglydpnvc-697456071670.europe-west2.run.app');
         if (backendUrl) {
           const cleanBackendUrl = backendUrl.replace(/\/$/, '');
           if (typeof input === 'string') {

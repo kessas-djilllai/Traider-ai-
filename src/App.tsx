@@ -303,7 +303,7 @@ export default function App() {
       if (data.success && data.url) {
         let finalUrl = data.url;
         if (finalUrl.startsWith("/")) {
-          const backendUrl = localStorage.getItem('api_backend_url') || '';
+          const backendUrl = localStorage.getItem('api_backend_url') || ((import.meta as any).env?.VITE_API_BACKEND_URL || 'https://ais-pre-ggqoug6mr767qlglydpnvc-697456071670.europe-west2.run.app');
           if (backendUrl) {
             finalUrl = `${backendUrl.replace(/\/$/, '')}${finalUrl}`;
           }
@@ -618,14 +618,8 @@ export default function App() {
   // Render Login / Registration UI
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#f0f4f8] text-slate-800 flex flex-col justify-center items-center px-4 relative overflow-hidden" dir="rtl">
-        {/* Animated glowing liquid blobs for liquid glassmorphic background */}
-        <div className="absolute top-10 left-10 w-72 h-72 bg-rose-300/30 rounded-full filter blur-[100px] animate-blob-slow pointer-events-none" />
-        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-cyan-300/30 rounded-full filter blur-[120px] animate-blob-slower pointer-events-none" />
-        <div className="absolute bottom-10 left-1/3 w-80 h-80 bg-violet-300/25 rounded-full filter blur-[110px] animate-blob-slowest pointer-events-none" />
-        <div className="absolute top-3/4 right-10 w-80 h-80 bg-amber-200/35 rounded-full filter blur-[100px] animate-blob-slow pointer-events-none" />
-
-        <div className="w-full max-w-md glass-card rounded-3xl p-6 md:p-8 space-y-6 relative z-10 shadow-2xl">
+      <div className="min-h-screen bg-white text-slate-800 flex flex-col justify-center items-center px-4 relative overflow-hidden" dir="rtl">
+        <div className="w-full max-w-md bg-white border border-slate-100 rounded-3xl p-6 md:p-8 space-y-6 relative z-10 shadow-2xl">
           <div className="flex flex-col items-center text-center space-y-2">
             <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-white/80 text-blue-600 shadow-sm backdrop-blur-md">
               <TrendingUp className="w-6 h-6 animate-pulse" />
@@ -715,80 +709,7 @@ export default function App() {
             تسجيل الدخول / التسجيل عبر Google
           </button>
 
-          {/* Automatic detection alert for Vercel/External hostings */}
-          {(!window.location.origin.endsWith('.run.app') && !window.location.origin.includes('localhost') && !window.location.origin.includes('127.0.0.1') && !localStorage.getItem('api_backend_url')) && (
-            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 text-[11px] p-3.5 rounded-2xl space-y-1.5 leading-relaxed text-right animate-fade-in">
-              <div className="font-bold flex items-center gap-1">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
-                <span>تنبيه الاتصال بالخادم (Vercel)</span>
-              </div>
-              <p className="text-[10px] text-slate-600 leading-normal">
-                أنت تقوم بتشغيل الواجهة من استضافة خارجية (مثل Vercel). لإتاحة تسجيل الدخول والاتصال، يرجى إدخال رابط خادم Cloud Run الخاص بك في خيار "إعدادات اتصال الخادم" بالأسفل.
-              </p>
-            </div>
-          )}
 
-          {/* Server Connection settings for Vercel/External environments */}
-          <div className="pt-2 border-t border-slate-100/50">
-            <button
-              type="button"
-              onClick={() => setShowConnectionSettings(!showConnectionSettings)}
-              className="w-full flex items-center justify-center gap-1.5 text-[11px] text-slate-500 hover:text-blue-600 transition-all cursor-pointer"
-            >
-              <Server className="w-3.5 h-3.5" />
-              <span>إعدادات اتصال الخادم (مطلوب لـ Vercel)</span>
-            </button>
-            
-            {showConnectionSettings && (
-              <div className="mt-3 p-3.5 bg-slate-50 border border-slate-200/55 rounded-2xl space-y-2.5 animate-fade-in text-right">
-                <div className="text-[10px] text-slate-500 leading-relaxed">
-                  إذا قمت برفع الموقع على Vercel، يجب عليك إدخال رابط خادم Cloud Run الخاص بك هنا لكي يتصل التطبيق بقاعدة البيانات والـ API بشكل صحيح.
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-600 mb-1">رابط خادم API (Backend URL):</label>
-                  <input
-                    type="url"
-                    value={backendUrlInput}
-                    onChange={(e) => setBackendUrlInput(e.target.value)}
-                    placeholder="https://ais-...run.app"
-                    className="w-full border border-slate-200/80 rounded-xl px-3 py-2 text-[11px] text-slate-800 focus:outline-none focus:border-blue-500 text-left"
-                    dir="ltr"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      localStorage.setItem('api_backend_url', backendUrlInput.trim());
-                      showToast("تم حفظ رابط الخادم بنجاح! سيتم إعادة تحميل الصفحة للتطبيق.", "success");
-                      setTimeout(() => {
-                        window.location.reload();
-                      }, 1000);
-                    }}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold py-2 rounded-xl transition-all cursor-pointer"
-                  >
-                    حفظ وإعادة تحميل
-                  </button>
-                  {localStorage.getItem('api_backend_url') && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        localStorage.removeItem('api_backend_url');
-                        setBackendUrlInput('');
-                        showToast("تمت استعادة الرابط الافتراضي بنجاح!", "success");
-                        setTimeout(() => {
-                          window.location.reload();
-                        }, 1000);
-                      }}
-                      className="bg-slate-200 hover:bg-slate-300 text-slate-700 text-[10px] font-bold px-3 py-2 rounded-xl transition-all cursor-pointer"
-                    >
-                      إعادة تعيين
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
         </div>
       </div>
     );
@@ -796,13 +717,7 @@ export default function App() {
 
   // --- Main Dashboard UI ---
   return (
-    <div className="min-h-screen bg-[#f0f4f8] text-slate-800 flex flex-col justify-between font-sans antialiased relative overflow-hidden animate-fade-in" dir="rtl">
-      {/* Animated glowing liquid blobs for liquid glassmorphic background */}
-      <div className="absolute top-10 left-10 w-72 h-72 bg-rose-300/30 rounded-full filter blur-[100px] animate-blob-slow pointer-events-none" />
-      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-cyan-300/30 rounded-full filter blur-[120px] animate-blob-slower pointer-events-none" />
-      <div className="absolute bottom-10 left-1/3 w-80 h-80 bg-violet-300/25 rounded-full filter blur-[110px] animate-blob-slowest pointer-events-none" />
-      <div className="absolute top-3/4 right-10 w-80 h-80 bg-amber-200/35 rounded-full filter blur-[100px] animate-blob-slow pointer-events-none" />
-
+    <div className="min-h-screen bg-white text-slate-800 flex flex-col justify-between font-sans antialiased relative overflow-hidden animate-fade-in" dir="rtl">
       {/* Header */}
       <header className="border-b border-white/60 bg-white/45 backdrop-blur-xl sticky top-0 z-40 shadow-[0_4px_20px_0_rgba(148,163,184,0.04)]">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -900,124 +815,7 @@ export default function App() {
             </button>
           </div>
 
-          {/* Database Status Panel */}
-          {supabaseStatus && (
-            <div className="glass-card rounded-3xl p-5 sm:p-6 shadow-2xl border border-white/60 bg-white/45 backdrop-blur-xl space-y-4 text-right">
-              <div className="flex items-center justify-between border-b border-white/50 pb-3">
-                <span className={`px-2.5 py-1 rounded-full text-[9px] font-black tracking-wide ${
-                  supabaseStatus.connected 
-                    ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 animate-pulse' 
-                    : 'bg-rose-500/10 text-rose-600 border border-rose-500/20'
-                }`}>
-                  {supabaseStatus.connected ? 'متصل بنجاح' : 'غير متصل'}
-                </span>
-                <h3 className="text-xs font-black text-slate-850 flex items-center gap-2">
-                  <Database className="w-4.5 h-4.5 text-emerald-600" />
-                  حالة ربط قاعدة بيانات Supabase
-                </h3>
-              </div>
 
-              {!supabaseStatus.connected ? (
-                <div className="space-y-3">
-                  <div className="text-[11px] text-amber-700 bg-amber-500/10 border border-amber-500/20 p-3.5 rounded-2xl space-y-1">
-                    <p className="font-black flex items-center gap-1 justify-end">
-                      <span>ملاحظة مهمة لمزامنة البيانات:</span>
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                    </p>
-                    <p className="leading-relaxed">
-                      لتفعيل الربط السحابي ومزامنة بيانات المستخدمين بـ Supabase، يرجى تشغيل الأمر التالي في SQL Editor داخل لوحة تحكم Supabase الخاصة بك لإنشاء الجدول المطلوب:
-                    </p>
-                  </div>
-
-                  <div className="relative font-mono">
-                    <pre className="bg-slate-900/5 text-left text-slate-800 text-[10px] p-4 rounded-xl border border-slate-200 overflow-x-auto select-all">
-{`-- 1. جدول الإعدادات العامة والتحديثات
-create table if not exists app_store (
-  id text primary key,
-  data jsonb not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- 2. جدول المستخدمين المفصل (أعمدة مخصصة وسحب فوري)
-create table if not exists app_users (
-  username text primary key,
-  password text,
-  api_key text,
-  secret_key text,
-  use_testnet boolean default false,
-  trading_status text default 'idle',
-  trading_start_time bigint,
-  extra_profit numeric default 0,
-  last_known_balance numeric default 0,
-  spot_balance numeric default 0,
-  funding_balance numeric default 0,
-  last_error text,
-  withdrawals jsonb default '[]'::jsonb,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);`}
-                    </pre>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(`-- 1. جدول الإعدادات العامة والتحديثات
-create table if not exists app_store (
-  id text primary key,
-  data jsonb not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- 2. جدول المستخدمين المفصل (أعمدة مخصصة وسحب فوري)
-create table if not exists app_users (
-  username text primary key,
-  password text,
-  api_key text,
-  secret_key text,
-  use_testnet boolean default false,
-  trading_status text default 'idle',
-  trading_start_time bigint,
-  extra_profit numeric default 0,
-  last_known_balance numeric default 0,
-  spot_balance numeric default 0,
-  funding_balance numeric default 0,
-  last_error text,
-  withdrawals jsonb default '[]'::jsonb,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);`);
-                        showToast("تم نسخ كود SQL بنجاح!", "success");
-                      }}
-                      className="absolute top-2 left-2 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/20 text-[10px] text-blue-600 font-bold px-2.5 py-1 rounded transition-all active:scale-95 cursor-pointer"
-                    >
-                      نسخ الكود
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-slate-500 font-bold leading-relaxed">
-                    * تأكد من إضافة المتغيرات البيئية <code className="font-mono text-slate-700 bg-slate-100 px-1 py-0.5 rounded text-[11px]">SUPABASE_URL</code> و <code className="font-mono text-slate-700 bg-slate-100 px-1 py-0.5 rounded text-[11px]">SUPABASE_ANON_KEY</code> في إعدادات الخادم ليعمل الاتصال السحابي تلقائياً وبأقصى درجات الحماية والأمان.
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                  <div className="bg-white/40 backdrop-blur-sm p-3.5 rounded-2xl border border-white/85 space-y-1 text-left font-mono">
-                    <span className="text-slate-400 text-[9px] font-black block">Supabase URL</span>
-                    <p className="text-slate-700 truncate text-[11px] font-bold">{supabaseStatus.supabaseUrl}</p>
-                  </div>
-                  <div className="bg-white/40 backdrop-blur-sm p-3.5 rounded-2xl border border-white/85 space-y-1 text-left font-mono">
-                    <span className="text-slate-400 text-[9px] font-black block">API Key (Anon)</span>
-                    <p className="text-slate-700 truncate text-[11px] font-bold">{supabaseStatus.supabaseKey}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Secure Server Environment Notification */}
-              <div className="border-t border-white/50 pt-4 mt-4 text-right space-y-2">
-                <div className="flex items-center gap-2 justify-end text-emerald-700 font-black text-xs">
-                  <span>تم تأمين الاتصال عبر متغيرات البيئة</span>
-                  <CheckCircle className="w-4 h-4 text-emerald-600" />
-                </div>
-                <p className="text-[10px] text-slate-500 leading-relaxed font-bold">
-                  تطبيقاً لأعلى معايير الحماية والأمان، يتم جلب وربط قاعدة بيانات Supabase سحابياً بشكل مباشر وتلقائي من متغيرات بيئة الخادم (Environment Variables) الخاصة بالاستضافة، ومُنع إدخالها يدوياً من واجهة لوحة الإدارة لمنع أي تسرّب للبيانات الحساسة.
-                </p>
-              </div>
-            </div>
-          )}
 
           {/* Admin alert notifications */}
           {adminMessage && (
