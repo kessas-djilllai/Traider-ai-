@@ -1,7 +1,6 @@
 import express from "express";
 import path from "path";
 import cors from "cors";
-import { createServer as createViteServer } from "vite";
 import ccxt from "ccxt";
 import { RSI, MACD, EMA } from "technicalindicators";
 import fs from "fs";
@@ -13,7 +12,28 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 
-const STORE_FILE = path.join(process.cwd(), "store.json");
+const STORE_FILE = process.env.VERCEL ? "/tmp/store.json" : path.join(process.cwd(), "store.json");
+
+let isStoreLoaded = false;
+let storeLoadPromise: Promise<void> | null = null;
+
+if (process.env.VERCEL && supabase) {
+  app.use(async (req, res, next) => {
+    if (!isStoreLoaded) {
+      if (!storeLoadPromise) {
+        storeLoadPromise = loadStoreFromSupabase().then(() => {
+          isStoreLoaded = true;
+        }).catch(err => {
+          console.error("Failed to load store from Supabase:", err);
+          // try again on next request if it fails
+          storeLoadPromise = null;
+        });
+      }
+      await storeLoadPromise;
+    }
+    next();
+  });
+}
 
 // Define custom User type
 interface UserStore {
@@ -325,7 +345,7 @@ function translateBinanceError(error: any): string {
   }
 
   if (errName === 'PermissionDenied' || errMsg.includes('PermissionDenied') || errMsg.includes('not authorized') || errMsg.includes('unauthorized') || errMsg.includes('API key does not have') || errMsg.includes('401')) {
-    return "خطأ في الصلاحيات (PermissionDenied): مفتاح API الخاص بك لا يملك الصلاحيات الكافية (مثل جلب الرصيد أو تفعيل السحب Enable Withdrawals). يرجى تعديل إعدادات مفتاح API الخاص بك في Binance وتفعيل الخيارات اللازمة.";
+    return "عذراً، الصلاحيات مرفوضة (PermissionDenied). للتمكن من السحب، يجب عليك تفعيل خيار (Enable Withdrawals) في إعدادات مفتاح API الخاص بك على منصة Binance، ويجب أيضاً إضافة عنوان IP الخاص بالخادم إلى قائمة الـ IP المسموح بها (IP Whitelist). يمكنك نسخ الـ IP من الأسفل.";
   }
   
   if (errName === 'AuthenticationError' || errMsg.includes('AuthenticationError') || errMsg.includes('API-key format invalid') || errMsg.includes('Invalid API-key') || errMsg.includes('Signature for this request is not valid')) {
@@ -1074,6 +1094,7 @@ async function startServer() {
   }
 
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
@@ -1087,9 +1108,15 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+  if (!process.env.VERCEL) {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  }
 }
 
-startServer();
+if (!process.env.VERCEL) {
+  startServer();
+}
+
+export default app;
