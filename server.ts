@@ -14,27 +14,6 @@ app.use(express.json());
 
 const STORE_FILE = process.env.VERCEL ? "/tmp/store.json" : path.join(process.cwd(), "store.json");
 
-let isStoreLoaded = false;
-let storeLoadPromise: Promise<void> | null = null;
-
-if (process.env.VERCEL && supabase) {
-  app.use(async (req, res, next) => {
-    if (!isStoreLoaded) {
-      if (!storeLoadPromise) {
-        storeLoadPromise = loadStoreFromSupabase().then(() => {
-          isStoreLoaded = true;
-        }).catch(err => {
-          console.error("Failed to load store from Supabase:", err);
-          // try again on next request if it fails
-          storeLoadPromise = null;
-        });
-      }
-      await storeLoadPromise;
-    }
-    next();
-  });
-}
-
 // Define custom User type
 interface UserStore {
   username: string;
@@ -100,6 +79,27 @@ function initSupabase() {
 
 // Call initially (will fallback to env variables first if loaded)
 initSupabase();
+
+let isStoreLoaded = false;
+let storeLoadPromise: Promise<void> | null = null;
+
+if (process.env.VERCEL) {
+  app.use(async (req, res, next) => {
+    if (supabase && !isStoreLoaded) {
+      if (!storeLoadPromise) {
+        storeLoadPromise = loadStoreFromSupabase().then(() => {
+          isStoreLoaded = true;
+        }).catch(err => {
+          console.error("Failed to load store from Supabase:", err);
+          // try again on next request if it fails
+          storeLoadPromise = null;
+        });
+      }
+      await storeLoadPromise;
+    }
+    next();
+  });
+}
 
 async function loadStoreFromSupabase() {
   if (!supabase) return;

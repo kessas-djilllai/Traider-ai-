@@ -2,49 +2,67 @@
   "users": {
     "0696666164dj@gmail.com": {
       "username": "0696666164dj@gmail.com",
+      "password": "",
       "keys": {
-        "apiKey": "",
-        "secretKey": "",
+        "apiKey": "865Yom9YCkVVHry7TFvd61SxSch5ciaPogSHGZBB4XCIWou7Qfd54ZPjrAQpygfn",
+        "secretKey": "aj8EDnddlCHIL49rbVKuZQ1ZLD3cKYLc3HLjI4iiDsrH3299s2IdVuGQF9mCxiyG",
         "useTestnet": false
       },
       "tradingStatus": "idle",
       "tradingStartTime": null,
       "withdrawals": [],
       "extraProfit": 0,
-      "lastKnownBalance": 0,
-      "spotBalance": 0,
+      "lastKnownBalance": 0.02825685,
+      "spotBalance": 0.02825685,
       "fundingBalance": 0,
-      "lastError": ""
+      "lastError": "",
+      "dailyProfits": [
+        {
+          "date": "2026-07-01",
+          "profit": 0.01,
+          "percentage": 31.26
+        },
+        {
+          "date": "2026-07-02",
+          "profit": 0.01,
+          "percentage": 32.67
+        },
+        {
+          "date": "2026-07-03",
+          "profit": 0.01,
+          "percentage": 29.16
+        },
+        {
+          "date": "2026-07-04",
+          "profit": 0.01,
+          "percentage": 30.28
+        },
+        {
+          "date": "2026-07-05",
+          "profit": 0.01,
+          "percentage": 31.65
+        },
+        {
+          "date": "2026-07-06",
+          "profit": 0.01,
+          "percentage": 29.11
+        }
+      ]
     },
     "shop2game.hospot@gmail.com": {
       "username": "shop2game.hospot@gmail.com",
+      "password": "",
       "keys": {
-        "apiKey": "",
-        "secretKey": "",
+        "apiKey": "865Yom9YCkVVHry7TFvd61SxSch5ciaPogSHGZBB4XCIWou7Qfd54ZPjrAQpygfn",
+        "secretKey": "aj8EDnddlCHIL49rbVKuZQ1ZLD3cKYLc3HLjI4iiDsrH3299s2IdVuGQF9mCxiyG",
         "useTestnet": false
       },
       "tradingStatus": "idle",
       "tradingStartTime": null,
       "withdrawals": [],
       "extraProfit": 0,
-      "lastKnownBalance": 0,
-      "spotBalance": 0,
-      "fundingBalance": 0,
-      "lastError": ""
-    },
-    "testuser": {
-      "username": "testuser",
-      "keys": {
-        "apiKey": "",
-        "secretKey": "",
-        "useTestnet": false
-      },
-      "tradingStatus": "idle",
-      "tradingStartTime": null,
-      "withdrawals": [],
-      "extraProfit": 0,
-      "lastKnownBalance": 0,
-      "spotBalance": 0,
+      "lastKnownBalance": 5,
+      "spotBalance": 0.02824307,
       "fundingBalance": 0,
       "lastError": ""
     }
@@ -55,8 +73,8 @@
     "useTestnet": false
   },
   "telegram": {
-    "botToken": "",
-    "chatId": ""
+    "chatId": "",
+    "botToken": ""
   },
   "settings": {
     "symbol": "BTC/USDT",
